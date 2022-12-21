@@ -9,6 +9,6 @@ public class HomeController {
 
     @GetMapping
     public String greeting(@RequestParam(required = false, defaultValue = "") String name) {
-        return name.equals("") ? "Hey!" : "Hey, " + name + "!";
+        return "".equals(name) ? "Hey!" : "Hey, " + name + "!";
     }
 }

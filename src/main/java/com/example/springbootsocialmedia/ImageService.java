@@ -7,16 +7,22 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
-import org.springframework.util.FileCopyUtils;
-import org.springframework.util.FileSystemUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+
+import static java.lang.String.valueOf;
+import static java.nio.file.Files.createDirectory;
+import static java.nio.file.Files.newDirectoryStream;
+import static java.nio.file.Paths.get;
+import static org.springframework.util.FileCopyUtils.copy;
+import static org.springframework.util.FileSystemUtils.deleteRecursively;
+import static reactor.core.publisher.Flux.empty;
+import static reactor.core.publisher.Flux.fromIterable;
+import static reactor.core.publisher.Mono.fromSupplier;
 
 @Service
 @RequiredArgsConstructor
@@ -27,19 +33,19 @@ public class ImageService {
 
     public Flux<Image> findAllImages() {
         try {
-            return Flux.fromIterable(Files.newDirectoryStream(Paths.get(UPLOAD_ROOT)))
-                    .map(path -> new Image(String.valueOf(path.hashCode()), path.getFileName().toString()));
+            return fromIterable(newDirectoryStream(get(UPLOAD_ROOT)))
+                    .map(path -> new Image(valueOf(path.hashCode()), path.getFileName().toString()));
         } catch (IOException exc) {
-            return Flux.empty();
+            return empty();
         }
     }
 
     public Mono<Resource> findOneImage(String filename) {
-        return Mono.fromSupplier(() -> resourceLoader.getResource("file: " + UPLOAD_ROOT + "/" + filename));
+        return fromSupplier(() -> resourceLoader.getResource("file: " + UPLOAD_ROOT + "/" + filename));
     }
 
     public Mono<Void> createImage(Flux<FilePart> files) {
-        return files.flatMap(filePart -> filePart.transferTo(Paths.get(UPLOAD_ROOT, filePart.filename()).toFile())).then();
+        return files.flatMap(filePart -> filePart.transferTo(get(UPLOAD_ROOT, filePart.filename()).toFile())).then();
     }
 
     @Bean
@@ -47,12 +53,12 @@ public class ImageService {
         return ImageService::run;
     }
     private static void run(String... args) throws IOException {
-        FileSystemUtils.deleteRecursively(new File(UPLOAD_ROOT));
+        deleteRecursively(new File(UPLOAD_ROOT));
 
-        Files.createDirectory(Paths.get(UPLOAD_ROOT));
+        createDirectory(get(UPLOAD_ROOT));
 
-        FileCopyUtils.copy("Test File", new FileWriter(UPLOAD_ROOT + "/learning-spring-boot-cover.jpg"));
-        FileCopyUtils.copy("Test File2", new FileWriter(UPLOAD_ROOT + "/learning-spring-boot-2nd-edition-cover.jpg"));
-        FileCopyUtils.copy("Test File3", new FileWriter(UPLOAD_ROOT + "/bazinga.png"));
+        copy("Test File", new FileWriter(UPLOAD_ROOT + "/learning-spring-boot-cover.jpg"));
+        copy("Test File2", new FileWriter(UPLOAD_ROOT + "/learning-spring-boot-2nd-edition-cover.jpg"));
+        copy("Test File3", new FileWriter(UPLOAD_ROOT + "/bazinga.png"));
     }
 }
