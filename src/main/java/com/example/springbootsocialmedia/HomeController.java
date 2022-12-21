@@ -5,6 +5,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,9 +23,10 @@ public class HomeController {
 
     private final ImageService imageService;
 
-    @GetMapping
-    public String greeting(@RequestParam(required = false, defaultValue = "") String name) {
-        return "".equals(name) ? "Hey!" : "Hey, " + name + "!";
+    @GetMapping("/")
+    public Mono<String> index(Model model) {
+        model.addAttribute("images", imageService.findAllImages());
+        return just("index");
     }
 
     @GetMapping(value = BASE_PATH + "/" + FILENAME + "/raw", produces = MediaType.IMAGE_JPEG_VALUE)
