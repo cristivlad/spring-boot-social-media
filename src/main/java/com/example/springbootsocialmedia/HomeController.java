@@ -43,11 +43,15 @@ public class HomeController {
                 });
     }
 
-    @PostMapping(value = BASE_PATH)
+    @PostMapping(BASE_PATH)
     public Mono<String> createFile(@RequestPart(name = "file")Flux<FilePart> files) {
         return imageService.createImage(files)
                 .then(just("redirect:/"));
     }
 
-
+    @DeleteMapping(BASE_PATH + "/" + FILENAME)
+    public Mono<String> deleteFile(@PathVariable String filename) {
+        return imageService.deleteImage(filename)
+                .then(just("redirect:/"));
+    }
 }
