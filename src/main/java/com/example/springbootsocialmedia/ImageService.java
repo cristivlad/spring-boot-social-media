@@ -15,13 +15,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import static java.lang.String.valueOf;
-import static java.nio.file.Files.createDirectory;
-import static java.nio.file.Files.newDirectoryStream;
+import static java.nio.file.Files.*;
 import static java.nio.file.Paths.get;
 import static org.springframework.util.FileCopyUtils.copy;
 import static org.springframework.util.FileSystemUtils.deleteRecursively;
 import static reactor.core.publisher.Flux.empty;
 import static reactor.core.publisher.Flux.fromIterable;
+import static reactor.core.publisher.Mono.fromRunnable;
 import static reactor.core.publisher.Mono.fromSupplier;
 
 @Service
@@ -46,6 +46,16 @@ public class ImageService {
 
     public Mono<Void> createImage(Flux<FilePart> files) {
         return files.flatMap(filePart -> filePart.transferTo(get(UPLOAD_ROOT, filePart.filename()).toFile())).then();
+    }
+
+    public Mono<Void> deleteImage(String filename) {
+        return fromRunnable(() -> {
+            try {
+                deleteIfExists(get(UPLOAD_ROOT, filename));
+            } catch (IOException exc) {
+                throw new RuntimeException();
+            }
+        });
     }
 
     @Bean
