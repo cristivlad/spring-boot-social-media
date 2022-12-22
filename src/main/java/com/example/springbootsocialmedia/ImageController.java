@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class ImageController {
 
-    @GetMapping("/images")
+    @GetMapping("/imagesTest")
     Flux<Image> images() {
         return Flux.just(
                 new Image("1", "learning-spring-boot-cover.jpg"),
@@ -21,7 +21,7 @@ public class ImageController {
         );
     }
 
-    @PostMapping("/images")
+    @PostMapping("/imagesTest")
     Mono<Void> create(@RequestBody Flux<Image> images) {
         return images
                 .map(image -> {
