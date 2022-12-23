@@ -2,7 +2,6 @@ package com.example.springbootsocialmedia;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.ui.Model;
@@ -12,6 +11,8 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 
+import static org.springframework.http.MediaType.IMAGE_JPEG_VALUE;
+import static org.springframework.http.ResponseEntity.badRequest;
 import static reactor.core.publisher.Mono.just;
 
 @RestController
@@ -29,7 +30,7 @@ public class HomeController {
         return just("index");
     }
 
-    @GetMapping(value = BASE_PATH + "/" + FILENAME + "/raw", produces = MediaType.IMAGE_JPEG_VALUE)
+    @GetMapping(value = BASE_PATH + "/" + FILENAME + "/raw", produces = IMAGE_JPEG_VALUE)
     @ResponseBody
     public Mono<ResponseEntity<?>> oneRawImage(@PathVariable String filename) {
         return imageService.findOneImage(filename)
@@ -39,14 +40,14 @@ public class HomeController {
                                 .contentLength(resource.contentLength())
                                 .body(new InputStreamResource(resource.getInputStream()));
                     } catch (IOException e) {
-                        return ResponseEntity.badRequest()
+                        return badRequest()
                                 .body("Couldn't find " + filename + " => " + e.getMessage());
                     }
                 });
     }
 
     @PostMapping(BASE_PATH)
-    public Mono<String> createFile(@RequestPart(name = "file")Flux<FilePart> files) {
+    public Mono<String> createFile(@RequestPart(name = "file") Flux<FilePart> files) {
         return imageService.createImage(files)
                 .then(just("redirect:/"));
     }
