@@ -2,11 +2,16 @@ package com.example.springbootsocialmedia;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
-@Configuration
+@Component
 public class LoadDatabase {
+
+    private static void accept(Image image) {
+        System.out.println(image.toString());
+    }
 
     @Bean
     CommandLineRunner init(ChapterRepository repository) {
@@ -16,5 +21,18 @@ public class LoadDatabase {
             new Chapter("... and more!"))
                 .flatMap(repository::save)
                 .subscribe(System.out::println);
+    }
+
+    @Bean
+    CommandLineRunner initMongo(MongoOperations operations) {
+        return args -> {
+            operations.dropCollection(Image.class);
+
+            operations.insert(new Image("1", "learning-spring-boot-Cover.jpg"));
+            operations.insert(new Image("2", "learning-spring-boot-2nd-ed-Cover.jpg"));
+            operations.insert(new Image("3", "bazinga.png"));
+
+            operations.findAll(Image.class).forEach(LoadDatabase::accept);
+        };
     }
 }

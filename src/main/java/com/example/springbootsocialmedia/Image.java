@@ -1,13 +1,13 @@
 package com.example.springbootsocialmedia;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Document
 public class Image {
-    private String id;
-    private String name;
+    @Id
+    private final String id;
+    private final String name;
 }
