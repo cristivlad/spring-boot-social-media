@@ -2,7 +2,7 @@ package com.example.springbootsocialmedia;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -24,7 +24,7 @@ public class LoadDatabase {
     }
 
     @Bean
-    CommandLineRunner initMongo(MongoOperations operations) {
+    CommandLineRunner initMongo(ReactiveMongoOperations operations) {
         return args -> {
             operations.dropCollection(Image.class);
 
@@ -32,7 +32,7 @@ public class LoadDatabase {
             operations.insert(new Image("2", "learning-spring-boot-2nd-ed-Cover.jpg"));
             operations.insert(new Image("3", "bazinga.png"));
 
-            operations.findAll(Image.class).forEach(LoadDatabase::accept);
+            operations.findAll(Image.class).subscribe(LoadDatabase::accept);
         };
     }
 }
