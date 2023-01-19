@@ -32,7 +32,7 @@ public class ImageService {
     private final ImageRepository imageRepository;
 
     public Flux<Image> findAllImages() {
-        return imageRepository.findAll();
+        return imageRepository.findAll().log("findAll");
     }
 
     public Mono<Resource> findOneImage(String filename) {
@@ -40,8 +40,10 @@ public class ImageService {
     }
 
     public Mono<Void> createImage(Flux<FilePart> files) {
-        return files.flatMap(file -> {
-            Mono<Image> saveDbImage = imageRepository.save(new Image(UUID.randomUUID().toString(), file.filename()));
+        return files
+                .log("createImage-files")
+                .flatMap(file -> {
+            Mono<Image> saveDbImage = imageRepository.save(new Image(UUID.randomUUID().toString(), file.filename())).log("createImage-save");
             Mono<Void> copyFile = Mono.just(Paths.get(UPLOAD_ROOT, file.filename()).toFile())
                     .log("createImage-picktarget")
                     .map(destFile -> {
@@ -55,22 +57,31 @@ public class ImageService {
                     .log("createImage-newfile")
                     .flatMap(file::transferTo)
                     .log("createImage-copy");
-            return Mono.when(saveDbImage, copyFile);
+            return Mono.when(saveDbImage, copyFile)
+                    .log("createImage-when");
         })
-                .then();
+                .log("createImage-flatMap")
+                .then()
+                .log("createImage-done");
     }
 
     public Mono<Void> deleteImage(String filename) {
         Mono<Void> deleteDbImage = imageRepository.findByName(filename)
-                .flatMap(imageRepository::delete);
+                .log("deleteImage-find")
+                .flatMap(imageRepository::delete)
+                .log("deleteImage-record");
         Mono<Void> deleteFile = Mono.fromRunnable(() -> {
             try {
-                Files.deleteIfExists(Paths.get(UPLOAD_ROOT, filename));
+                Files.deleteIfExists(get(UPLOAD_ROOT, filename));
             } catch (IOException exception) {
                 throw new RuntimeException();
             }
-        });
-        return Mono.when(deleteDbImage, deleteFile).then();
+        })
+                .log("deleteImage-file").then();
+        return Mono.when(deleteDbImage, deleteFile)
+                .log("deleteImage-when")
+                .then()
+                .log("deleteImage-done");
     }
 
     @Bean
